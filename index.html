@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Premium Task Manager</title>
+    <!-- Modern Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <!-- Phosphor Icons for a clean, premium look -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Top Navigation -->
+    <nav id="navbar" class="navbar">
+        <div class="nav-brand">
+            <i class="ph ph-check-square-offset"></i>
+            <span>Task Master</span>
+        </div>
+        <div id="nav-actions-auth" class="nav-actions hidden">
+            <button id="theme-toggle-btn" class="btn-icon" aria-label="Toggle Theme"><i class="ph ph-sun"></i></button>
+            <button id="stats-btn" class="btn-icon" aria-label="Statistics"><i class="ph ph-chart-bar"></i></button>
+            <div class="notification-container">
+                <button id="noti-btn" class="btn-icon" aria-label="Notifications">
+                    <i class="ph ph-bell"></i>
+                    <span id="noti-badge" class="badge hidden"></span>
+                </button>
+                <div id="noti-dropdown" class="dropdown-menu hidden">
+                    <!-- Notifications will be injected here -->
+                    <div class="dropdown-empty">No new notifications</div>
+                </div>
+            </div>
+            
+            <div class="user-profile">
+                <button id="profile-btn" class="btn-secondary btn-sm" aria-label="Open Profile">
+                    <img id="navbar-profile-pic" src="https://cdn.iconscout.com/icon/free/png-256/free-user-circle-3609976-3014616.png" alt="Profile" style="width:24px; height:24px; border-radius:50%; object-fit:cover; display:none;">
+                    <i class="ph ph-user" id="navbar-profile-icon"></i>
+                    <span id="username-display">User</span>
+                </button>
+                <button id="logout-btn" class="btn-secondary btn-sm">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main App Content -->
+    <main id="app-main" class="app-container hidden">
+        <header>
+            <h1>Your Tasks</h1>
+            <p>Stay productive.</p>
+        </header>
+
+        <div class="toolbar">
+            <input type="text" id="search-input" placeholder="Search tasks..." class="search-input">
+            <select id="filter-category" class="filter-select">
+                <option value="All">All Categories</option>
+                <option value="Work">Work</option>
+                <option value="Study">Study</option>
+                <option value="Personal">Personal</option>
+                <option value="General">General</option>
+            </select>
+        </div>
+
+        <form id="task-form" class="task-form-expanded">
+            <div class="input-group">
+                <input type="text" id="task-input" placeholder="What needs to be done?" autocomplete="off" required>
+                <button type="button" id="ai-enhance-btn" class="btn-icon" title="AI Enhance (Suggest subtasks or parse details)"><i class="ph ph-magic-wand"></i></button>
+            </div>
+            <div class="task-options">
+                <select id="task-category" class="option-select">
+                    <option value="General">General</option>
+                    <option value="Work">Work</option>
+                    <option value="Study">Study</option>
+                    <option value="Personal">Personal</option>
+                </select>
+                <select id="task-priority" class="option-select">
+                    <option value="Low">🟢 Low</option>
+                    <option value="Medium" selected>🟡 Medium</option>
+                    <option value="High">🔴 High</option>
+                </select>
+                <div id="task-due-date-container" style="display:flex; align-items:center; gap:8px;">
+                    <span style="color:var(--text-muted); font-size:0.9rem;">Due Date:</span>
+                    <input type="date" id="task-due-date" class="option-date" title="Due Date">
+                    <button type="button" id="clear-date-btn" class="btn-icon hidden" title="Clear Date" aria-label="Clear Date" style="margin-left:-4px;">
+                        <i class="ph ph-x"></i>
+                    </button>
+                </div>
+                <button type="submit" id="add-btn" class="btn-primary" aria-label="Add Task">
+                    <i class="ph ph-plus-circle"></i> Add Task
+                </button>
+            </div>
+        </form>
+
+        <div class="kanban-board">
+            <div class="kanban-column">
+                <h3>To Do</h3>
+                <ul id="list-pending" class="task-list dropzone" data-status="Pending">
+                </ul>
+            </div>
+            <div class="kanban-column">
+                <h3>Done</h3>
+                <ul id="list-completed" class="task-list dropzone" data-status="Completed">
+                </ul>
+            </div>
+        </div>
+    </main>
+
+    <!-- Dashboard Modal -->
+    <div id="dashboard-modal" class="overlay hidden">
+        <div class="modal-card" style="max-height:85vh; overflow-y:auto; width:600px; max-width:90%;">
+            <div class="modal-header">
+                <h2>Productivity Dashboard</h2>
+                <button id="close-dashboard" class="btn-icon close-modal"><i class="ph ph-x"></i></button>
+            </div>
+            
+            <div id="ai-insights-section" style="margin-bottom: 20px; padding: 15px; background: rgba(168, 85, 247, 0.1); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 12px; display: none;">
+                <h3 style="display:flex; align-items:center; gap:8px; color:#a855f7; margin-bottom:10px;"><i class="ph ph-sparkle"></i> Smart Insights</h3>
+                <p id="ai-insight-text" style="font-size:0.95rem; line-height:1.5; margin-bottom:10px;"></p>
+                <div id="ai-daily-plan" style="font-size:0.9rem; line-height:1.6; color:var(--text-muted); white-space:pre-wrap;"></div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-box">Total: <span id="stat-total">0</span></div>
+                <div class="stat-box completed">Completed: <span id="stat-completed">0</span></div>
+                <div class="stat-box pending">Pending: <span id="stat-pending">0</span></div>
+                <div class="stat-box overdue">Overdue: <span id="stat-overdue">0</span></div>
+            </div>
+            <canvas id="stats-chart" width="400" height="200" style="margin-top:20px;"></canvas>
+        </div>
+    </div>
+
+    <!-- Profile Modal (Expanded for Viewing & Editing) -->
+    <div id="profile-modal" class="overlay hidden">
+        <div class="modal-card" style="max-height:85vh; overflow-y:auto;">
+            <div class="modal-header">
+                <h2>User Profile & Settings</h2>
+                <button id="close-profile" class="btn-icon close-modal"><i class="ph ph-x"></i></button>
+            </div>
+            
+            <div style="display:flex; flex-direction:column; gap:25px;">
+                <!-- Profile Edit Section -->
+                <form id="profile-edit-form" style="display:flex; flex-direction:column; gap:12px;">
+                    <h3 style="font-size:1.1rem; color:var(--text-muted);">Edit Profile</h3>
+                    
+                    <div style="display:flex; align-items:center; gap:15px; margin-bottom:10px;">
+                        <img id="profile-modal-pic" src="" alt="Avatar" style="width:60px; height:60px; border-radius:50%; object-fit:cover;">
+                        <input type="url" id="profile-pic-input" placeholder="Profile Picture URL" class="auth-input" style="flex:1;">
+                    </div>
+                    
+                    <div class="input-group">
+                        <i class="ph ph-user"></i>
+                        <input type="text" id="profile-name-input" placeholder="Username" class="auth-input" required>
+                    </div>
+                    
+                    <div class="input-group">
+                        <i class="ph ph-envelope"></i>
+                        <input type="email" id="profile-email-input" placeholder="Email Address" class="auth-input" required>
+                    </div>
+                    
+                    <button type="submit" class="btn-primary" style="width:100%;">Save Profile</button>
+                </form>
+
+                <hr style="border:0; border-top:1px solid var(--container-border);">
+
+                <!-- Password Change Section -->
+                <form id="password-edit-form" style="display:flex; flex-direction:column; gap:12px;">
+                    <h3 style="font-size:1.1rem; color:var(--text-muted);">Change Password</h3>
+                    
+                    <div class="input-group">
+                        <i class="ph ph-lock-key"></i>
+                        <input type="password" id="profile-old-pass" placeholder="Current Password" class="auth-input" required>
+                    </div>
+                    <div class="input-group">
+                        <i class="ph ph-lock"></i>
+                        <input type="password" id="profile-new-pass" placeholder="New Password" class="auth-input" required>
+                    </div>
+                    
+                    <button type="submit" class="btn-primary" style="width:100%;">Update Password</button>
+                </form>
+            </div>
+            
+            <p id="profile-msg" style="text-align:center; margin-top:20px; font-size:0.9rem;" class="hidden"></p>
+        </div>
+    </div>
+
+    <!-- Auth Overlay -->
+    <div id="auth-overlay" class="overlay">
+        <div class="auth-card">
+            <div class="auth-header">
+                <h2>Welcome</h2>
+                <p>Log in or sign up to save your tasks across devices.</p>
+            </div>
+            
+            <div class="auth-toggle">
+                <button id="toggle-login" class="active">Login</button>
+                <button id="toggle-signup">Sign Up</button>
+            </div>
+
+            <form id="auth-form" class="auth-form">
+                <div id="signup-fields" class="hidden">
+                    <input type="text" id="auth-username" placeholder="Username" autocomplete="username">
+                </div>
+                <input type="email" id="auth-email" placeholder="Email Address" required autocomplete="email">
+                <input type="password" id="auth-password" placeholder="Password" required autocomplete="current-password">
+                
+                <div id="auth-error" class="error-msg hidden"></div>
+                
+                <button type="submit" id="auth-submit-btn" class="btn-primary">Log In</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Comments Modal -->
+    <div id="comments-modal" class="overlay hidden">
+        <div class="modal-card" style="display:flex; flex-direction:column; height:80vh; max-height:600px;">
+            <div class="modal-header">
+                <h2>Task Comments</h2>
+                <button id="close-comments" class="btn-icon close-modal"><i class="ph ph-x"></i></button>
+            </div>
+            
+            <div id="comments-list" style="flex:1; overflow-y:auto; padding:10px 0; display:flex; flex-direction:column; gap:12px;">
+                <!-- Comments injected here -->
+            </div>
+
+            <form id="comment-form" style="display:flex; gap:10px; margin-top:20px;">
+                <input type="text" id="comment-input" placeholder="Type a comment..." class="auth-input" style="flex:1; margin-bottom:0;" required>
+                <button type="submit" class="btn-primary" style="border-radius:12px; height:auto; padding:0 15px;"><i class="ph ph-paper-plane-right" style="font-size:1.2rem;"></i></button>
+            </form>
+        </div>
+    </div>
+
+    <!-- App Toast Notification -->
+    <div id="app-toast" class="toast hidden"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>
