@@ -4,7 +4,10 @@
   "description": "",
   "main": "app.js",
   "scripts": {
+<<<<<<< HEAD
     "start": "node server.js",
+=======
+>>>>>>> 8b503a24a0792ffda5a1a773044adb98601fd451
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -17,7 +20,10 @@
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
+<<<<<<< HEAD
     "jsdom": "^28.1.0",
+=======
+>>>>>>> 8b503a24a0792ffda5a1a773044adb98601fd451
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.3.0"
   }

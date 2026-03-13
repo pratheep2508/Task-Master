@@ -44,9 +44,15 @@ app.post('/api/auth/register', async (req, res) => {
         }
 
         // Check if user exists
+<<<<<<< HEAD
         const userExists = await User.findOne({ $or: [{ email }, { username }] });
         if (userExists) {
             return res.status(400).json({ error: 'Username or email already exists' });
+=======
+        const userExists = await User.findOne({ email });
+        if (userExists) {
+            return res.status(400).json({ error: 'User already exists' });
+>>>>>>> 8b503a24a0792ffda5a1a773044adb98601fd451
         }
 
         // Hash password
@@ -78,8 +84,12 @@ app.post('/api/auth/register', async (req, res) => {
             res.status(400).json({ error: 'Invalid user data' });
         }
     } catch (error) {
+<<<<<<< HEAD
         console.error('Registration error:', error);
         res.status(500).json({ error: 'Server error registering user', details: error.message });
+=======
+        res.status(500).json({ error: 'Server error registering user' });
+>>>>>>> 8b503a24a0792ffda5a1a773044adb98601fd451
     }
 });
 

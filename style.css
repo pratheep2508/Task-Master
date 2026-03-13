@@ -600,6 +600,7 @@ body.light-theme .btn-secondary:hover {
     display: none !important;
 }
 
+<<<<<<< HEAD
 /* App Toast Notification */
 .toast {
     position: fixed;
@@ -620,6 +621,8 @@ body.light-theme .btn-secondary:hover {
     transform: translateX(-50%) translateY(0);
 }
 
+=======
+>>>>>>> 8b503a24a0792ffda5a1a773044adb98601fd451
 /* Additional fixes for layout */
 #app-main {
     margin-top: 80px; /* Offset for navbar */
