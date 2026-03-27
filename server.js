@@ -150,6 +150,8 @@ const mapTask = (task) => ({
     priority: task.priority,
     dueDate: task.dueDate,
     status: task.status,
+    isDaily: task.isDaily,
+    completedAt: task.completedAt,
     order: task.order,
     createdAt: task.createdAt
 });
@@ -176,6 +178,22 @@ app.get('/api/tasks', protect, async (req, res) => {
 
         // Find tasks
         const tasks = await Task.find(query).sort({ order: 1, createdAt: 1 });
+        
+        // Reset daily tasks that were completed on previous days
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        let tasksUpdated = false;
+
+        for (let task of tasks) {
+            if (task.isDaily && task.completed && task.completedAt && task.completedAt < today) {
+                task.completed = false;
+                task.status = 'Pending';
+                task.completedAt = null;
+                await task.save();
+                tasksUpdated = true;
+            }
+        }
+        
         res.json(tasks.map(mapTask));
     } catch (error) {
          console.error(error);
@@ -186,7 +204,7 @@ app.get('/api/tasks', protect, async (req, res) => {
 // 2. Create a new task (Protected)
 app.post('/api/tasks', protect, async (req, res) => {
     try {
-        const { text, category, priority, dueDate, status, order } = req.body;
+        const { text, category, priority, dueDate, isDaily, status, order } = req.body;
         
         if (!text) {
             return res.status(400).json({ error: 'Text is required for a task' });
@@ -198,6 +216,7 @@ app.post('/api/tasks', protect, async (req, res) => {
             category: category || 'General',
             priority: priority || 'Medium',
             dueDate: dueDate || null,
+            isDaily: isDaily || false,
             status: status || 'Pending',
             order: order || 0
         });
@@ -212,7 +231,7 @@ app.post('/api/tasks', protect, async (req, res) => {
 app.put('/api/tasks/:id', protect, async (req, res) => {
     try {
         const { id } = req.params;
-        const { text, completed, category, priority, dueDate, status, order } = req.body;
+        const { text, completed, category, priority, dueDate, isDaily, status, order } = req.body;
 
         const task = await Task.findById(id);
 
@@ -227,17 +246,28 @@ app.put('/api/tasks/:id', protect, async (req, res) => {
 
         const updateData = {};
         if (text !== undefined) updateData.text = text;
+        if (isDaily !== undefined) updateData.isDaily = isDaily;
         if (completed !== undefined) {
             updateData.completed = completed;
-            if (completed) updateData.status = 'Completed';
+            if (completed) {
+                updateData.status = 'Completed';
+                updateData.completedAt = new Date();
+            } else {
+                updateData.completedAt = null;
+            }
         }
         if (category !== undefined) updateData.category = category;
         if (priority !== undefined) updateData.priority = priority;
         if (dueDate !== undefined) updateData.dueDate = dueDate;
         if (status !== undefined) {
              updateData.status = status;
-             if (status === 'Completed') updateData.completed = true;
-             else updateData.completed = false;
+             if (status === 'Completed') {
+                 updateData.completed = true;
+                 updateData.completedAt = new Date();
+             } else {
+                 updateData.completed = false;
+                 updateData.completedAt = null;
+             }
         }
         if (order !== undefined) updateData.order = order;
 
@@ -288,12 +318,22 @@ app.put('/api/tasks/reorder/bulk', protect, async (req, res) => {
         }
 
         // Create bulk operations
-        const bulkOps = tasks.map((t) => ({
-            updateOne: {
-                filter: { _id: t.id, user: req.user.id },
-                update: { $set: { order: t.order, status: t.status } },
-            },
-        }));
+        const bulkOps = tasks.map((t) => {
+            let setObj = { order: t.order, status: t.status };
+            if (t.status === 'Completed') {
+                setObj.completed = true;
+                setObj.completedAt = new Date();
+            } else if (t.status === 'Pending') {
+                setObj.completed = false;
+                setObj.completedAt = null;
+            }
+            return {
+                updateOne: {
+                    filter: { _id: t.id, user: req.user.id },
+                    update: { $set: setObj },
+                },
+            };
+        });
 
         if (bulkOps.length > 0) {
             await Task.bulkWrite(bulkOps);

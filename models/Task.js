@@ -31,6 +31,14 @@ const taskSchema = new mongoose.Schema({
         enum: ['Pending', 'In Progress', 'Completed'],
         default: 'Pending'
     },
+    isDaily: {
+        type: Boolean,
+        default: false
+    },
+    completedAt: {
+        type: Date,
+        default: null
+    },
     order: {
         type: Number,
         default: 0

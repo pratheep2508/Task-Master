@@ -35,6 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const taskPriority = document.getElementById('task-priority');
         const taskDueDate = document.getElementById('task-due-date');
         const clearDateBtn = document.getElementById('clear-date-btn');
+        const taskIsDaily = document.getElementById('task-is-daily');
 
         // DOM Elements - Auth
         const authOverlay = document.getElementById('auth-overlay');
@@ -355,6 +356,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <span class="task-pill">${escapeHTML(task.category || 'General')}</span>
                         <span class="task-pill ${task.priority ? task.priority.toLowerCase() : 'medium'}">${getPriorityIcon(task.priority)} ${task.priority || 'Medium'}</span>
                         ${task.dueDate ? `<span class="task-pill ${isOverdue ? 'overdue' : ''}">Due: ${new Date(task.dueDate).toLocaleDateString()}</span>` : ''}
+                        ${task.isDaily ? `<span class="task-pill" style="color:var(--primary);" title="Daily Task"><i class="ph ph-arrows-clockwise"></i> Daily</span>` : ''}
                     </div>
                 </div>
                 <div class="task-actions">
@@ -488,6 +490,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const category = taskCategory.value;
             const priority = taskPriority.value;
             const dueDate = taskDueDate.value;
+            const isDaily = taskIsDaily.checked;
 
             if (!text) return;
 
@@ -500,6 +503,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         category,
                         priority,
                         dueDate: dueDate || null,
+                        isDaily,
                         status: 'Pending',
                         order: tasks.length
                     })
@@ -512,6 +516,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 tasks.push(newTask);
                 input.value = '';
                 taskDueDate.value = ''; // reset
+                taskIsDaily.checked = false; // reset
                 clearDateBtn.classList.add('hidden');
                 renderTasks();
             } catch (error) {
